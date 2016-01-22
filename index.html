@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+<h1>AudioParam Automation</h1>
+<br/>
+<table>
+<tr><td> Attack : </td><td> <input id="atk" type="text" size="10" value="0.5"/> </td><td> linearRampToValueAtTime() </td></tr>
+<tr><td> Decay : </td><td> <input id="dcy" type="text" size="10" value="1"/> </td><td> setTargetAtTime() </td></tr>
+<tr><td> Sustain : </td><td> <input id="sus" type="text" size="10" value="0.5"/> </td><td></td></tr>
+<tr><td> Release : </td><td> <input id="rel" type="text" size="10" value="1"/> </td><td> setTargetAtTime() </td></tr>
+</table>
+<br/>
+<button onmousedown="KeyOn()" onmouseup="KeyOff()"> Press! </button>
+<br/>
+<canvas id="canvas" width="512" height="256"></canvas>
+<script type="text/javascript">
+var audioctx = new AudioContext();
+var play = 0;
+var osc = audioctx.createOscillator();
+osc.frequency.value=1000;
+var gain = audioctx.createGain();
+var proc = audioctx.createScriptProcessor(0,1,1);
+gain.gain.value = 0;
+gain.connect(proc);
+proc.connect(audioctx.destination);
+var maxval=0;
+
+proc.onaudioprocess = function(e) {
+  var bufin = e.inputBuffer.getChannelData(0);
+  var bufout = e.outputBuffer.getChannelData(0);
+  for(var i=bufin.length-1;i>=0;--i){
+    var t=bufin[i];
+    var t2=Math.abs(t);
+    if(t2>maxval)
+      maxval=t2;
+    bufout[i]=t;
+  }
+}
+
+function KeyOn() {
+	if(play == 0) {
+		play = 1;
+		osc.connect(gain);
+		osc.start(0);
+	}
+	x = 0;
+	var t0 = audioctx.currentTime;
+	var t1 = t0 + parseFloat(document.getElementById("atk").value);
+	var d = parseFloat(document.getElementById("dcy").value);
+	var s = parseFloat(document.getElementById("sus").value);
+	gain.gain.setValueAtTime(0, t0);
+	gain.gain.linearRampToValueAtTime(1, t1);
+	gain.gain.setTargetAtTime(s, t1, d);
+}
+function KeyOff() {
+	var r = parseFloat(document.getElementById("rel").value);
+	var t0 = audioctx.currentTime;
+	gain.gain.cancelScheduledValues(t0);
+	gain.gain.setTargetAtTime(0, t0, r);
+}
+
+var x = 0;
+var ctx = document.getElementById("canvas").getContext("2d");
+ctx.fillStyle = "#222222";
+ctx.fillRect(0, 0, 512, 256);
+setInterval(Interval, 50);
+
+var dat=new Uint8Array(256);
+function Interval() {
+  if(x==0){
+    ctx.fillStyle="#222222";
+    ctx.fillRect(0,0,512,256);
+    x+=2;
+    return;
+  }
+	if(x<500) {
+		var y;
+    y=maxval*256;
+		ctx.fillStyle = "#00ff00";
+		ctx.fillRect(x, 256 - y, 2, y*2);
+	}
+	x += 2;
+  ctx.fillStyle = "#222222";
+  ctx.fillRect(x, 0, 2, 256);
+  maxval=0;
+}
+
+</script>
+</body>
+</html>
