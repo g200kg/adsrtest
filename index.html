@@ -55,9 +55,9 @@ function KeyOn() {
 }
 function KeyOff() {
 	var r = parseFloat(document.getElementById("rel").value);
-	var t0 = audioctx.currentTime;
-	gain.gain.cancelScheduledValues(t0);
-	gain.gain.setTargetAtTime(0, t0, r);
+	var t2 = audioctx.currentTime;
+	gain.gain.cancelScheduledValues(t2);
+	gain.gain.setTargetAtTime(0, t2, r);
 }
 
 var x = 0;
